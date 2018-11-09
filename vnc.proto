@@ -1,0 +1,102 @@
+// ---------------------
+// woodboard backend API
+// ---------------------
+syntax = "proto3";
+package woodboard;
+
+// ---------------------
+// service discovery API
+// ---------------------
+//
+// just like:
+//
+//   service_info := get_service(type/"vnc")
+//
+message RqstSrvDscvy {
+  string Name = 1;
+  string SrvType = 2; // "vnc"/....
+}
+
+message RplySrvDscvy {
+  string Name = 1;
+  string SrvInfo = 2; // in json: ip/port/....
+}
+
+service DSCVY {
+  // bidi stream: svr<-->clnt
+  rpc BidiStrm(stream RqstSrvDscvy) returns (stream RplySrvDscvy) {}
+}
+
+// --------------- 
+// auth service API
+// --------------- 
+//
+// just like:
+//
+//         void        send_vrf_email (email);             // gen a code, save code with expire, send email
+//  access_token            vrf_email (email, code);       // check code/expire in db
+//     user_info   check_access_token (access_token);      // decode token -> user_id/email. no need to read db.
+//  access_token              refresh (old access_token);  // check old token(sig/exp)
+// 
+message RqstAuth {
+  string Name = 1;
+
+  string Email = 2;
+  string Token = 3; 
+
+  string AgntUuid = 4;
+  string agnt_info = 5; // all agnt/os details in json
+}
+
+message RplyAuth {
+  string Name = 1;
+
+  string Email = 2;
+  string Token = 3; 
+  string Status = 4;
+  string AgntUuid = 5;
+}
+
+service AUTH {
+  rpc BidiStrm(stream RqstAuth) returns (stream RplyAuth) {}
+}
+
+// ----------------
+// bknd API for vnc
+// ----------------
+message RqstVnc {
+  string Name = 1;
+  string AgntUuid = 2;
+  string SssnUuid = 3;
+  string SssnScrt = 4;
+  string NiceCnfd = 5;
+}
+
+message RplyVnc {
+  string Name = 1;
+  string AgntUuid = 2;
+  string SssnUuid = 3;
+  string SssnScrt = 4;
+  string NiceCnfd = 5;
+}
+
+// test bidi stream
+message RqstTestBidiStrm {
+  string Id = 1;
+}
+
+message RplyTestBidiStrm {
+  string Id = 1;
+  int32 Rtn = 2;
+  string Evt = 3;
+}
+
+// just like a CRUD/REST api(create get update delete)
+service VNC {
+  // bidi stream: svr <--> clnt
+  rpc BidiStrm(stream RqstVnc) returns (stream RplyVnc) {}
+
+  // bidi stream for test
+  rpc TestBidiStrm(stream RqstTestBidiStrm) returns (stream RplyTestBidiStrm) {}
+}
+
